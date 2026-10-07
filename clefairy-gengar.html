@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moonlight Dance: Clefairy &amp; Gengar</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--sky1:#1b1440;--sky2:#4a2c7a;--ink:#fff7e8;--pink:#ff9ec4;--box:#120c2e;--line:#ffd86b;--grass:#2f6b4f;--grass2:#245540;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#120c2e;color:var(--ink);font-family:'Press Start 2P',ui-monospace,Menlo,monospace}
+#game{max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column}
+#hud{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:10px}
+#hearts{letter-spacing:3px}
+#scene{position:relative;flex:1;min-height:200px;background:linear-gradient(var(--sky1),var(--sky2));overflow:hidden;border-top:4px solid var(--line);border-bottom:4px solid var(--line)}
+#scene.warm{background:linear-gradient(#2a1a55,#a0498f)}
+#ground{position:absolute;left:0;right:0;bottom:0;height:28%;background:repeating-linear-gradient(90deg,var(--grass) 0 16px,var(--grass2) 16px 32px)}
+#moon{position:absolute;top:12%;right:14%;width:44px;height:44px;border-radius:50%;background:#fff3b0;box-shadow:0 0 28px #fff3b0}
+.star{position:absolute;width:4px;height:4px;background:#fff;animation:tw 2.4s steps(2) infinite}
+@keyframes tw{50%{opacity:.2}}
+.spr{position:absolute;bottom:20%;image-rendering:pixelated;transition:left .6s steps(6),opacity .4s}
+#clef{left:14%}
+#geng{left:100%;opacity:0}
+#geng.in{left:56%;opacity:1}
+.bob{animation:bob 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.float{position:absolute;font-size:22px;animation:up 1.6s linear forwards;pointer-events:none}
+@keyframes up{to{transform:translateY(-90px);opacity:0}}
+#box{background:var(--box);padding:14px 16px 12px;min-height:178px;display:flex;flex-direction:column;gap:12px}
+#who{font-size:10px;color:var(--line)}
+#text{font-size:11px;line-height:1.9}
+#choices{display:flex;flex-direction:column;gap:8px}
+button{font:inherit;font-size:10px;line-height:1.6;text-align:left;color:var(--ink);background:#2b1d63;border:3px solid var(--pink);padding:10px 12px;cursor:pointer;min-height:44px}
+button:active{background:var(--pink);color:#120c2e}
+button:focus-visible{outline:3px solid var(--line);outline-offset:2px}
+#next{align-self:flex-end;border-color:var(--line);text-align:center}
+#scene.shop{background:linear-gradient(#ffd6e7,#ff9ec4)}
+#scene.shop #ground{background:repeating-linear-gradient(90deg,#fff0f5 0 16px,#ffc2d9 16px 32px)}
+#scene.arcade{background:linear-gradient(#0d0d2b,#3a0f5c)}
+#scene.arcade #ground{background:repeating-linear-gradient(90deg,#1b1b4d 0 16px,#4a1b6b 16px 32px)}
+#scene.dinner{background:linear-gradient(#1b1440,#6b2f6a)}
+#scene.dinner #ground{background:repeating-linear-gradient(90deg,#5a3a2a 0 16px,#4a2e22 16px 32px)}
+#scene.shop #moon,#scene.arcade #moon{display:none}
+#scene.day{background:linear-gradient(#bfe8ff,#ffe2f0)}
+#scene.day #ground{background:repeating-linear-gradient(90deg,#8fd19e 0 16px,#7bc48c 16px 32px)}
+#scene.day #moon{display:none}
+#scene.night{background:linear-gradient(#10182f,#2d3a6b)}
+#scene.night #ground{background:repeating-linear-gradient(90deg,#3b2f5c 0 16px,#33284f 16px 32px)}
+#scene.sleepy{background:linear-gradient(#070a18,#171d3d)}
+#scene.sleepy #ground{background:repeating-linear-gradient(90deg,#241c3c 0 16px,#1d1632 16px 32px)}
+#geng.in.zz{opacity:.5}
+#scene.wedding{background:linear-gradient(#2a1a55,#e48fb5)}
+#scene.wedding #ground{background:repeating-linear-gradient(90deg,#ffe0ec 0 16px,#f6b8d0 16px 32px)}
+.guest{display:none;position:absolute;bottom:20%;image-rendering:pixelated}
+#scene.wedding .guest{display:block}
+#scene.sky{background:linear-gradient(#0b1033,#3b2a7a)}
+#scene.sky #ground{display:none}
+#scene.sky #clef,#scene.sky #geng{bottom:46%;transition:none}
+#scene.sky #clef{animation:flyc 9s linear infinite,bob 1s steps(2) infinite}
+#scene.sky #geng{animation:flyg 9s linear infinite,bob 1s steps(2) infinite}
+@keyframes flyc{from{left:-45%}to{left:105%}}
+@keyframes flyg{from{left:-23%}to{left:127%}}
+@media (prefers-reduced-motion:reduce){.star,.bob,.float{animation:none}.spr{transition:none}}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="hud"><span id="chap">Chapter 1: Moonlight</span><span id="hearts"></span></div>
+  <div id="scene">
+    <div id="moon"></div>
+    <div id="ground"></div>
+    <canvas id="clef" class="spr bob"></canvas>
+    <canvas id="geng" class="spr"></canvas>
+    <canvas id="gd" class="guest bob" style="left:2%"></canvas>
+    <canvas id="ge" class="guest bob" style="left:41%"></canvas>
+    <canvas id="gp" class="guest bob" style="left:83%"></canvas>
+  </div>
+  <div id="box">
+    <div id="who"></div>
+    <div id="text"></div>
+    <div id="choices"></div>
+  </div>
+</div>
+<script>
+const P={y:'#ffd84a',o:'#ff9f2e',b:'#b9824f',c:'#fff1dc',d:'#2b1b3d',p:'#ff9ec4',w:'#fff1f6',e:'#1a1026',u:'#7a4bc2',r:'#ff4d6d',t:'#ffffff'};
+const CLEF=[
+"..dd......dd..",
+".dppd....dppd.",
+".dpppddddpppd.",
+"dppppppppppppd",
+"dppeppppppeppd",
+"dppppppppppppd",
+"dpppppwwwwpppd",
+".dppppppppppd.",
+".dppwwwwwwppd.",
+"dppwwwwwwwwppd",
+"..dppd..dppd..",
+"..dddd..dddd.."];
+const GENG=[
+"..dd......dd..",
+".duud....duud.",
+".duuudddduuud.",
+"duuuuuuuuuuuud",
+"duurruuuurruud",
+"duurruuuurruud",
+"duuuuuuuuuuuud",
+"duutututututud",
+".duutttttuud..",
+".duuuuuuuuuud.",
+"..duud..duud..",
+"..dddd..dddd.."];
+function draw(id,rows,s){const c=document.getElementById(id);c.width=rows[0].length*s;c.height=rows.length*s;const x=c.getContext('2d');
+rows.forEach((r,y)=>[...r].forEach((k,i)=>{if(k==='.')return;x.fillStyle=P[k==='t'?'t':k]||P.u;x.fillRect(i*s,y*s,s,s)}))}
+const sz=innerWidth<400?6:7;
+draw('clef',CLEF,sz);draw('geng',GENG,sz);
+draw('gd',["...dddd...","..dyyyyd..",".dyeyyeyd.",".dyyyyyyd.",".dooooood.","..dyyyyd..",".dyyyyyyd.",".dyyyyyyd.","..dd..dd.."],4);
+draw('ge',["dbd....dbd","dbbd..dbbd",".dbbbbbbd.",".dbebbebd.",".dbbbbbbd.","..dbbbbd..",".dccccccd.",".dbbbbbbd.","..dd..dd.."],4);
+draw('gp',["dd......dd","dyd....dyd",".dyyyyyyd.",".dyeyyeyd.",".dryyyyrd.",".dyyyyyyd.","..dyyyyd..",".dyyyyyyd.","..dd..dd.."],4);
+const sc=document.getElementById('scene');
+for(let i=0;i<22;i++){const s=document.createElement('i');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*45+'%';s.style.animationDelay=Math.random()*2+'s';sc.appendChild(s)}
+
+let aff=0;
+const S={
+start:{who:'',t:'Mt. Moon, midnight. Clefairy is dancing alone under the full moon, just like every night.',n:'a1'},
+a1:{who:'Clefairy',t:'La la la... the moon is extra pretty tonight!',n:'a2'},
+a2:{who:'',t:'A shadow slides across the grass. Two red eyes and a very wide grin appear.',gengar:1,n:'a3'},
+a3:{who:'Gengar',t:'Hehe... Boo?',ch:[
+ ['Wave and say hi!',2,'b1'],
+ ['Keep dancing like nothing happened',1,'b2'],
+ ['Squeal and hide behind a rock',0,'b3']]},
+b1:{who:'Clefairy',t:'Hi! You are not scary at all. You are just late to the party!',n:'c1'},
+b2:{who:'Gengar',t:'Whoa, nobody has ever ignored my Boo before. I respect that.',n:'c1'},
+b3:{who:'Gengar',t:'Oh no, I did it again. Sorry! I am Gengar. Please come out, I brought no tricks.',n:'c1'},
+c1:{who:'Gengar',t:'I was just passing by. Your dance was really... nice. Sorry for spying.',warm:1,ch:[
+ ['Teach Gengar the dance',2,'d1'],
+ ['Ask why he lurks in the dark',1,'d2']]},
+d1:{who:'Gengar',t:'I only know how to float menacingly. But I will try!',n:'e1'},
+d2:{who:'Gengar',t:'Shadows are quiet. Nobody sees me there. Tonight I wanted to be seen.',n:'e1'},
+e1:{who:'',t:'Together they sway under the moon. Gengar trips twice. Clefairy laughs both times.',n:'e2'},
+e2:{who:'Gengar',t:'This is the best night I have had in a long time. Can I... see you again?',ch:[
+ ['Hold his hand',2,'f1'],
+ ['Giggle and say "tomorrow, same place?"',1,'f2']]},
+f1:{who:'Clefairy',t:'Yes. Tomorrow, and the day after, too.',n:'g0'},
+f2:{who:'Gengar',t:'Tomorrow. I will be early. Very early. Not creepy early.',n:'g0'},
+g0:{chap:'Chapter 2: Dates',bg:'shop',who:'',t:'A week later. A tiny ice cream shop glows pink at the edge of town. Gengar floated here early. Not creepy early.',n:'g1'},
+g1:{who:'Gengar',t:'One scoop of shadow flavor, please.',n:'g2'},
+g2:{who:'',t:'The shopkeeper blinks. "We only have strawberry."',n:'g3'},
+g3:{who:'Gengar',t:'...Then strawberry. Two spoons. Do not tell the shadows.',n:'g4'},
+g4:{who:'',t:'Clefairy is already smiling. Strawberry is her favorite. The cone arrives, tall and pink.',ch:[
+ ['Share one cone, two lickers',2,'h1'],
+ ['Fight Gengar for the cone',1,'h2']]},
+h1:{who:'Gengar',t:'One cone, two lickers. This is how legends begin.',n:'i1'},
+h2:{who:'Gengar',t:'Cheater! Fairies cheat! ...I respect it.',n:'i1'},
+i1:{who:'Gengar',t:'Fun fact: I am allergic... of other flavors.',n:'i2'},
+i2:{who:'',t:'Clefairy laughs so hard she almost drops the cone. Gengar catches it. Barely.',ch:[
+ ['"Bwisit, that was terrible!"',2,'j1'],
+ ['Laugh and ask for another joke',1,'j2']]},
+j1:{who:'Gengar',t:'Terrible? Thank you. I worked on it all week.',n:'k0'},
+j2:{who:'Gengar',t:'I have forty more. They only get worse.',n:'k0'},
+k0:{bg:'arcade',who:'',t:'Next stop: the arcade. Neon lights blink in the dark. Ghosts and glowing screens get along.',n:'k1'},
+k1:{who:'',t:'The claw machine is dead. Inside sits a prize: one cute strawberry sticker.',n:'k2'},
+k2:{who:'Gengar',t:'Step back. I am about to bring this machine back to life.',n:'k3'},
+k3:{who:'',t:'He pokes one cable. The machine hums awake. Clefairy claps. Gengar bows like it was nothing.',n:'k4'},
+k4:{who:'',t:'The claw drops. Wobble... wobble... the sticker is yours! Where should it go?',ch:[
+ ['On Gengar\'s forehead',2,'m1'],
+ ['On your own forehead',1,'m2']]},
+m1:{who:'Gengar',t:'I will never take it off. I will haunt this sticker forever.',n:'o1'},
+m2:{who:'Gengar',t:'Cute. Very cute. You are now an official sticker fairy.',n:'o1'},
+o1:{who:'Gengar',t:'Important test. Say "mischievous" for me.',n:'o2'},
+o2:{who:'',t:'Clefairy says it perfectly. Gengar squints and nods slowly.',n:'o3'},
+o3:{who:'Gengar',t:'Hmm. Close. Mine sounds like "miss you boss."',ch:[
+ ['"Ahahaha, bwisit!"',2,'p1'],
+ ['Say it back: "miss you boss"',2,'p2']]},
+p1:{who:'Gengar',t:'That laugh is my favorite sound in this whole arcade.',n:'q0'},
+p2:{who:'Gengar',t:'...Say it again. I am recording this in my ghost heart.',n:'q0'},
+q0:{bg:'dinner',who:'',t:'Dinner. A candlelit table under the moon, with strawberries on every plate.',n:'q1'},
+q1:{who:'Gengar',t:'I got you something. It is small, so do not panic.',n:'q2'},
+q2:{who:'',t:'A tiny box. Inside: a makeup palette in every shade of strawberry. Clefairy gasps and tries one right away.',n:'q3'},
+q3:{who:'Gengar',t:'I know makeup like I know the sun: mostly guessing. But you light up this whole table.',n:'q4'},
+q4:{who:'Gengar',t:'The night is still young. What should we do?',ch:[
+ ['A slow dance',2,'r1'],
+ ['A stargazing walk',2,'r2']]},
+r1:{who:'',t:'The crickets play soft music. Gengar leads. He steps on her foot only once.',n:'s1'},
+r2:{who:'',t:'Stars everywhere. Gengar names every constellation wrong, on purpose.',n:'s1'},
+s1:{who:'Gengar',t:'Clefairy... I like you. A lot. More than shadows like nighttime.',ch:[
+ ['"I like you too, Gengar."',2,'t1'],
+ ['"So... are we a thing now?"',2,'t2']]},
+t1:{who:'Gengar',t:'Then it is official. Clefairy and Gengar.',n:'u0'},
+t2:{who:'Gengar',t:'Yes. Very much a thing. The biggest thing.',n:'u0'},
+u0:{chap:'Chapter 3: Distance',bg:'day',gengar:0,who:'',t:'Clefairy and Gengar live on opposite sides of the hills. Today, both of them are busy.',n:'u1'},
+u1:{who:'',t:'Her phone buzzes. Gengar sent a sticker: a tiny ghost holding a strawberry.',ch:[
+ ['Send a cute sticker back',2,'v1'],
+ ['Send a smart-alec one-liner',2,'v2']]},
+v1:{who:'Gengar',t:'That sticker is now my wallpaper. Do not tell anyone.',n:'w0'},
+v2:{who:'Gengar',t:'Rude. Hilarious. Rude. Marked as favorite.',n:'w0'},
+w0:{bg:'night',who:'',t:'Evening. Clefairy gets home, kicks off her shoes, and settles into bed.',n:'w1'},
+w1:{gengar:1,who:'',t:'Her moon-phone glows. Gengar is calling.',n:'w2'},
+w2:{who:'Gengar',t:'Hi. You made it home. Tell me everything.',ch:[
+ ['Tell him about your day',2,'x1'],
+ ['Ask about his day',2,'x2']]},
+x1:{who:'Gengar',t:'Mm-hm. Go on. Even the boring parts. Especially the boring parts.',n:'y1'},
+x2:{who:'Gengar',t:'I fixed three broken gadgets and one broken toaster. The toaster has feelings now.',n:'y1'},
+y1:{who:'',t:'They talk about everything and nothing. The call timer keeps going: 00:47:12.',ch:[
+ ['Trade nonsense jokes',2,'z1'],
+ ['Plan a silly future adventure',2,'z2']]},
+z1:{who:'Gengar',t:'Knock knock. ...Boo. Do not cry, it is only me.',n:'sl1'},
+z2:{who:'Gengar',t:'Someday: our own ice cream shop. With a shadow flavor. I will make it myself.',n:'sl1'},
+sl1:{bg:'sleepy',who:'',t:'The room goes soft and dim. The jokes get shorter. The yawns get longer.',n:'sl2'},
+sl2:{who:'Gengar',t:'Five more minutes?',ch:[
+ ['"Five more minutes."',2,'sl3'],
+ ['"Ten more. You owe me."',2,'sl4']]},
+sl3:{who:'Gengar',t:'Five more minutes... I am not even sleepy... *yawn*',n:'sm1'},
+sl4:{who:'Gengar',t:'Deal. Ten minutes... I am wide awake... *yawn*',n:'sm1'},
+sm1:{zz:1,who:'',t:'Gengar goes quiet. His eyes close halfway. Then all the way.',n:'sm2'},
+sm2:{who:'',t:'He is asleep. The call timer keeps counting: 02:13:40. Soft ghost snores drift through the speaker.',n:'sm3'},
+sm3:{who:'',t:'Clefairy watches him for a moment. Then she smiles.',ch:[
+ ['Whisper: "Goodnight, Gengar."',2,'sn1'],
+ ['Stay a little longer and just watch',2,'sn2']]},
+sn1:{who:'Clefairy',t:'Goodnight, Gengar. I am right here.',n:'sn3'},
+sn2:{who:'',t:'She watches him sleep until her own eyes get heavy. Outside, the stars come out one by one.',n:'sn3'},
+sn3:{who:'',t:'The call stays on. Two hearts, far apart, close tonight.',n:'wd0'},
+wd0:{chap:'Chapter 4: Wedding',bg:'wedding',gengar:1,who:'',t:'Months later. A meadow wedding under the moon, with fairy lights strung between the trees.',n:'wd1'},
+wd1:{who:'',t:'Pikachu waves from the front row. Eevee trots in with the rings on a tiny pillow. Psyduck is holding his head, as usual.',n:'wd2'},
+wd2:{who:'Psyduck',t:'Wait. Is today the wedding? I thought it was lunch. Congrats!',ch:[
+ ['Hug Psyduck',2,'wd3'],
+ ['Say: "Cake is after, Psyduck."',2,'wd4']]},
+wd3:{who:'Psyduck',t:'A hug... my headache is gone. For one second.',n:'wd5'},
+wd4:{who:'Psyduck',t:'Cake?! I am here for the cake.',n:'wd5'},
+wd5:{who:'Pikachu',t:'Pika pika! The sticker guestbook is open. Everyone leaves a sticker!',n:'wd6'},
+wd6:{who:'',t:'A journal guestbook sits on a little table, with sheets of cute stickers beside it. The first page is empty.',ch:[
+ ['Place a strawberry sticker',2,'wd7'],
+ ['Place a tiny ghost sticker',2,'wd8']]},
+wd7:{who:'',t:'A strawberry sticker on page one. Pikachu adds a lightning bolt. Psyduck adds a confused duck.',n:'wd9'},
+wd8:{who:'',t:'A tiny ghost sticker on page one. Pikachu adds a lightning bolt. Psyduck adds a confused duck.',n:'wd9'},
+wd9:{who:'',t:'Eevee brings the rings over and licks Gengar on the hand. Everyone says aww.',n:'wd10'},
+wd10:{who:'Gengar',t:'Clefairy, I promise to laugh at my own jokes, even when you do not. And to call every night, even if I fall asleep first.',ch:[
+ ['Say: "I do."',2,'wd11'],
+ ['Say: "I do. Also, bwisit."',2,'wd12']]},
+wd11:{who:'Gengar',t:'She said yes. Somewhere, the shadows are cheering.',n:'wd13'},
+wd12:{who:'Gengar',t:'Bwisit accepted. That counts as a yes.',n:'wd13'},
+wd13:{who:'',t:'The cake arrives: three tiers of strawberry, with a tiny ghost and a tiny fairy on top.',ch:[
+ ['Cut the cake together',2,'wd14'],
+ ['Let Psyduck cut the first slice',2,'wd15']]},
+wd14:{who:'',t:'They cut it together. Gengar smudges frosting on her nose, on purpose.',n:'wd16'},
+wd15:{who:'',t:'Psyduck cuts a slice, stares at it, and eats it whole. Everyone applauds.',n:'wd16'},
+wd16:{who:'',t:'Fairy lights twinkle. Friends cheer. Clefairy and Gengar are married.',n:'fl0'},
+fl0:{chap:'Chapter 5: Forever',bg:'sky',fly:1,gengar:1,who:'',t:'The wedding is over. There is no car, so Clefairy and Gengar fly.',n:'fl1'},
+fl1:{who:'',t:'Over the meadow, past the lights, up into the stars. Side by side.',n:'fl2'},
+fl2:{who:'Gengar',t:'Where to, Mrs. Gengar?',ch:[
+ ['"Anywhere with you."',2,'fl3'],
+ ['"Straight to the moon."',2,'fl4']]},
+fl3:{who:'Gengar',t:'Anywhere it is. Hold on tight.',n:'fl5'},
+fl4:{who:'Gengar',t:'The moon it is. Hold on tight.',n:'fl5'},
+fl5:{who:'',t:'Clouds drift by. Stars blink. Two small shapes cross the sky, together.',n:'fl6'},
+fl6:{who:'Gengar',t:'I choose you. You will always have a home in me that you can come to.',n:'fl7'},
+fl7:{who:'',t:'Clefairy squeezes his hand, and they keep flying into the night.',n:'end'},
+end:{end:1}};
+let cur='start';
+const $=id=>document.getElementById(id);
+function pop(e){const f=document.createElement('span');f.className='float';f.textContent=e;f.style.left=(30+Math.random()*40)+'%';f.style.bottom='40%';sc.appendChild(f);setTimeout(()=>f.remove(),1700)}
+function hearts(){$('hearts').textContent='♥ '+aff}
+function show(id){
+ cur=id;const s=S[id];const ch=$('choices');ch.innerHTML='';
+ if(s.end){$('who').textContent='The End';
+  const m=aff>=32?'Clefairy and Gengar, happily ever after.':aff>=24?'A sweet story with a sweet ending.':'A small, cozy story, still perfect.';
+  $('text').textContent=m+' Thank you for playing.';
+  mk('Play again',()=>{aff=0;hearts();$('geng').className='spr';$('scene').className='';$('chap').textContent='Chapter 1: Moonlight';show('start')},ch);
+  mk('Share this game',share,ch);return}
+ $('who').textContent=s.who;$('text').textContent=s.t;
+ if(s.gengar){$('geng').classList.add('in');$('geng').classList.remove('zz')}if(s.fly)[0,1,2].forEach(i=>setTimeout(()=>pop('♥'),i*600));if(s.gengar===0)$('geng').classList.remove('in','zz');if(s.zz)$('geng').classList.add('zz');
+ if(s.warm)sc.classList.add('warm');if(s.bg!==undefined)sc.className=s.bg;if(s.chap)$('chap').textContent=s.chap;
+ if(s.ch)s.ch.forEach(c=>mk(c[0],()=>{aff+=c[1];hearts();for(let i=0;i<c[1];i++)pop('♥');show(c[2])},ch));
+ else{const b=mk('Next',()=>show(s.n),ch);b.id='next'}
+}
+function mk(t,f,p){const b=document.createElement('button');b.textContent=t;b.onclick=f;p.appendChild(b);return b}
+function share(){const d={title:document.title,url:location.href};
+ if(navigator.share)navigator.share(d).catch(()=>{});
+ else if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>{$('text').textContent='Link copied. Send it to a friend!'}).catch(()=>{})}
+hearts();show('start');
+</script>
+</body>
+</html>
